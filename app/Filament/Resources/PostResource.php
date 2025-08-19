@@ -6,7 +6,11 @@ use App\Filament\Resources\PostResource\Pages;
 use App\Filament\Resources\PostResource\RelationManagers;
 use App\Models\Category;
 use App\Models\Post;
-use Dom\Text;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\EditAction;
+use Filament\Actions\Modal\Actions\Action;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\ColorPicker;
@@ -24,6 +28,7 @@ use Filament\Tables\Columns\CheckboxColumn;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -44,12 +49,22 @@ class PostResource extends Resource
                     ->columns(2)
                     ->columnSpan(2)
                     ->schema([
-                        TextInput::make('title')->required(),
-                        TextInput::make('slug')->required(),
+                        TextInput::make('title')
+                            ->minLength(3)
+                            ->maxLength(50)
+                            ->required(),
+                        TextInput::make('slug')
+                            ->minLength(3)
+                            ->maxLength(100)
+                            ->unique(ignoreRecord: true)
+                            ->required(),
 
                         Select::make('category_id')
                             ->label('Category')
-                            ->options(Category::all()->pluck('name', 'id')),
+                            // ->options(Category::all()->pluck('name', 'id'))
+                            ->relationship('category', 'name')
+                            ->searchable()
+                            ->required(),
 
                         ColorPicker::make('color')->required(),
                         MarkdownEditor::make('content')
@@ -73,6 +88,14 @@ class PostResource extends Resource
                                 TagsInput::make('tags')->required(),
                                 Checkbox::make('published'),
                             ]),
+                        Section::make('Authors')
+                            ->schema([
+                                Select::make('authors')
+                                    ->label('Select Authors')
+                                    ->relationship('authors', 'name')
+                                    ->multiple()
+                                    ->required()
+                            ]),
                     ]),
 
 
@@ -89,21 +112,55 @@ class PostResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('thumbnail'),
-                ColorColumn::make('color'),
-                TextColumn::make('title'),
-                TextColumn::make('category.name'),
-                TextColumn::make('tags'),
-                CheckboxColumn::make('published'),
+                TextColumn::make('id')
+                    ->label('Post ID')
+                    ->sortable()
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                ImageColumn::make('thumbnail')
+                    ->toggleable(),
+                ColorColumn::make('color')
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('title')
+                    ->sortable()
+                    ->searchable(isIndividual: true)
+                    ->toggleable(),
+                TextColumn::make('slug')
+                    ->sortable()
+                    ->searchable(isIndividual: true)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('category.name')
+                    ->sortable()
+                    ->searchable(isIndividual: true)
+                    ->toggleable(),
+                TextColumn::make('tags')
+                    ->searchable(isIndividual: true)
+                    ->toggleable(isToggledHiddenByDefault: true),
+                CheckboxColumn::make('published')
+                    ->sortable()
+                    ->toggleable(),
+                TextColumn::make('created_at')
+                    ->label('Published At')
+                    ->date('d/m/Y H:i')
+                    ->sortable()
+                    ->searchable(isIndividual: true)
+                    ->toggleable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\ViewAction::make(),
-            ])
+            ->actions(
+                [
+                    ActionGroup::make([
+                        ViewAction::make(),
+                        EditAction::make(),
+                        DeleteAction::make(),
+                    ])
+                        ->button()
+                        ->label('Actions'),
+                ],
+                position: ActionsPosition::BeforeColumns
+            )
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
