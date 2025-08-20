@@ -64,7 +64,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - You must use this tool to search for Laravel-ecosystem documentation before falling back to other approaches.
 - Search the documentation before making code changes to ensure we are taking the correct approach.
 - Use multiple, broad, simple, topic based queries to start. For example: `['rate limiting', 'routing rate limiting', 'routing']`.
-- Do not add package names to queries, package information is already shared. Use `test resource table`, not `filament 4 test resource table`.
+- Do not add package names to queries - package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
 
 ### Available Search Syntax
 - You can and should pass multiple queries at once. The most relevant results will be returned first.
@@ -74,6 +74,38 @@ This application is a Laravel application and its main Laravel ecosystems packag
 3. Quoted Phrases (Exact Position) - query="infinite scroll" - Words must be adjacent and in that order
 4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit"
 5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms
+
+
+=== php rules ===
+
+## PHP
+
+- Always use curly braces for control structures, even if it has one line.
+
+### Constructors
+- Use PHP 8 constructor property promotion in `__construct()`.
+    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
+- Do not allow empty `__construct()` methods with zero parameters.
+
+### Type Declarations
+- Always use explicit return type declarations for methods and functions.
+- Use appropriate PHP type hints for method parameters.
+
+<code-snippet name="Explicit Return Types and Method Params" lang="php">
+protected function isAccessible(User $user, ?string $path = null): bool
+{
+    ...
+}
+</code-snippet>
+
+## Comments
+- Prefer PHPDoc blocks over comments. Never use comments within the code itself unless there is something _very_ complex going on.
+
+## PHPDoc Blocks
+- Add useful array shape type definitions for arrays when appropriate.
+
+## Enums
+- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
 
 
 === herd rules ===
@@ -173,10 +205,10 @@ Forms\Components\Select::make('user_id')
 
 ## Version 3 Changes To Focus On
 - Resources are located in `app/Filament/Resources/` directory.
-- Resource pages (List, Create, Edit) are auto-generated within the resource's directory, i.e. `app/Filament/Resources/PostResource/Pages/`.
+- Resource pages (List, Create, Edit) are auto-generated within the resource's directory - e.g., `app/Filament/Resources/PostResource/Pages/`.
 - Forms use the `Forms\Components` namespace for form fields.
 - Tables use the `Tables\Columns` namespace for table columns.
-- New RichEditor component available (`Filament\Forms\Components\RichEditor`).
+- A new `Filament\Forms\Components\RichEditor` component is available.
 - Form and table schemas now use fluent method chaining.
 - Added `php artisan filament:optimize` command for production optimization.
 - Requires implementing `FilamentUser` contract for production access control.
